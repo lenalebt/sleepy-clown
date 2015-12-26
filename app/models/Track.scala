@@ -1,8 +1,9 @@
 package models
 
-import java.time.Duration
+import java.time.{ZonedDateTime, Duration}
 
-import scala.language.implicitConversions
+import scala.language.{postfixOps, implicitConversions}
+import scala.xml.{NodeSeq, Elem}
 
 /**
   * A track that consists of multiple locations.
@@ -43,6 +44,38 @@ class Track(seq: Seq[Location]) {
   }
 }
 
+case class GpxLocation(
+  override val lat:           Double,
+  override val lon:           Double,
+  override val elevation:     Option[Double] = None,
+  override val dateTime:      ZonedDateTime,
+  override val heartbeatRate: Option[Double] = None
+) extends Location
+
 object Track {
+  private implicit class RichNode(val node: NodeSeq) {
+    def textOpt: Option[String] = Option(node.text) match {
+      case None | Some("") => None
+      case Some(text)      => Some(text)
+    }
+  }
+
   implicit def seqLocationToTrack(seq: Seq[Location]): Track = new Track(seq)
+  def fromGpx(gpx: Elem): Seq[Track] = {
+      def parseLocation(loc: Elem): Location = {
+        GpxLocation(
+          lat = (loc \@ "lat").toDouble,
+          lon = (loc \@ "lon").toDouble,
+          dateTime = ZonedDateTime.parse(loc \ "time" text), elevation = (loc \ "ele" textOpt).map(_.toDouble),
+          heartbeatRate = (loc \ "ele" textOpt).map(_.toDouble)
+        )
+      }
+      def parseTrack(trk: Elem): Track = {
+        (trk \ "trkseg" \ "trkpt").collect{ case loc: Elem => parseLocation(loc) }
+      }
+
+    (gpx \ "trk").collect{
+      case trk: Elem => parseTrack(trk)
+    }
+  }
 }

@@ -8,7 +8,7 @@ import java.time.ZonedDateTime
 trait Location {
   val lat: Double
   val lon: Double
-  val elevation: Double
+  val elevation: Option[Double]
   val dateTime: ZonedDateTime
   val heartbeatRate: Option[Double]
 

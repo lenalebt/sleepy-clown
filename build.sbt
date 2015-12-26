@@ -11,6 +11,8 @@ libraryDependencies ++= Seq(
   cache,
   ws,
 
+  "org.scala-lang.modules" %% "scala-xml" % "1.0.4",
+
   //Test libs
   "org.scalatest" %% "scalatest" % "2.2.4" % "test"
 )
